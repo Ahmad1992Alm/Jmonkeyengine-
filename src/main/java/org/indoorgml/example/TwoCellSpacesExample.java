@@ -47,6 +47,10 @@ public class TwoCellSpacesExample extends SimpleApplication {
         Vector3d center = computeCentroid(allPolygons).getPosition();
         scene.setLocalTranslation((float) -center.getX(), (float) -center.getY(), (float) -center.getZ());
 
+        // Scale the large coordinates down to a window friendly size
+        float scale = (float) (10.0 / computeMaxDimension(allPolygons));
+        scene.setLocalScale(scale);
+
         rootNode.attachChild(scene);
 
         flyCam.setMoveSpeed(5f);
@@ -77,6 +81,31 @@ public class TwoCellSpacesExample extends SimpleApplication {
         StatePoint state = new StatePoint();
         state.setPosition(new Vector3d(x / count, y / count, z / count));
         return state;
+    }
+
+    private double computeMaxDimension(List<Polygon> polygons) {
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double minZ = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        double maxZ = Double.NEGATIVE_INFINITY;
+
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                minX = Math.min(minX, v.getX());
+                minY = Math.min(minY, v.getY());
+                minZ = Math.min(minZ, v.getZ());
+                maxX = Math.max(maxX, v.getX());
+                maxY = Math.max(maxY, v.getY());
+                maxZ = Math.max(maxZ, v.getZ());
+            }
+        }
+
+        double dx = maxX - minX;
+        double dy = maxY - minY;
+        double dz = maxZ - minZ;
+        return Math.max(dx, Math.max(dy, dz));
     }
 
     private Polygon poly(Vector3d v1, Vector3d v2, Vector3d v3, Vector3d v4) {
