@@ -1,12 +1,16 @@
 package org.indoorgml.example;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.input.ChaseCamera;
+import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 import org.indoorgml.model.LineString;
 import org.indoorgml.model.Polygon;
 import org.indoorgml.model.StatePoint;
 import org.indoorgml.model.Vector3d;
-import org.indoorgml.visualizer.IndoorGMLVisualizer;
+import org.indoorgml.visualizer.CellSpaceGeometryBuilder;
+import org.indoorgml.visualizer.StateGeometryBuilder;
+import org.indoorgml.visualizer.TransitionGeometryBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +21,8 @@ import java.util.List;
  * polygons and connects their centroids with a transition.
  */
 public class TwoCellSpacesExample extends SimpleApplication {
+
+    private ChaseCamera chaseCam;
 
     public static void main(String[] args) {
         TwoCellSpacesExample app = new TwoCellSpacesExample();
@@ -40,11 +46,30 @@ public class TwoCellSpacesExample extends SimpleApplication {
 
         List<LineString> transitions = createTransition(states.get(0), states.get(1));
 
-        IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
-        Node scene = visualizer.buildScene(allPolygons, transitions, states);
+        // Scale large coordinates down and translate them so the geometry is
+        // centered around the origin before creating the scene graph.
+        float scale = (float) (10.0 / computeMaxDimension(allPolygons));
+        applyScale(allPolygons, transitions, states, scale);
+
+        Vector3d center = computeBoundingCenter(allPolygons);
+        applyTranslation(allPolygons, transitions, states,
+                -center.getX(), -center.getY(), -center.getZ());
+
+        Node scene = new Node("scene");
+        scene.attachChild(CellSpaceGeometryBuilder.buildCellSpaces(cellSpace1, assetManager,
+                ColorRGBA.Blue, 0.5f));
+        scene.attachChild(CellSpaceGeometryBuilder.buildCellSpaces(cellSpace2, assetManager,
+                ColorRGBA.Orange, 0.5f));
+        scene.attachChild(TransitionGeometryBuilder.buildTransitions(transitions, assetManager));
+        scene.attachChild(StateGeometryBuilder.buildStates(states, assetManager));
         rootNode.attachChild(scene);
 
-        flyCam.setMoveSpeed(5f);
+        flyCam.setEnabled(false);
+        chaseCam = new ChaseCamera(cam, scene, inputManager);
+        chaseCam.setDefaultDistance(6f);
+        chaseCam.setDragToRotate(true);
+        chaseCam.setMinDistance(2f);
+        chaseCam.setMaxDistance(20f);
     }
 
     private List<LineString> createTransition(StatePoint a, StatePoint b) {
@@ -72,6 +97,105 @@ public class TwoCellSpacesExample extends SimpleApplication {
         StatePoint state = new StatePoint();
         state.setPosition(new Vector3d(x / count, y / count, z / count));
         return state;
+    }
+
+    private double computeMaxDimension(List<Polygon> polygons) {
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double minZ = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        double maxZ = Double.NEGATIVE_INFINITY;
+
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                minX = Math.min(minX, v.getX());
+                minY = Math.min(minY, v.getY());
+                minZ = Math.min(minZ, v.getZ());
+                maxX = Math.max(maxX, v.getX());
+                maxY = Math.max(maxY, v.getY());
+                maxZ = Math.max(maxZ, v.getZ());
+            }
+        }
+
+        double dx = maxX - minX;
+        double dy = maxY - minY;
+        double dz = maxZ - minZ;
+        return Math.max(dx, Math.max(dy, dz));
+    }
+
+    private Vector3d computeBoundingCenter(List<Polygon> polygons) {
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double minZ = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        double maxZ = Double.NEGATIVE_INFINITY;
+
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                minX = Math.min(minX, v.getX());
+                minY = Math.min(minY, v.getY());
+                minZ = Math.min(minZ, v.getZ());
+                maxX = Math.max(maxX, v.getX());
+                maxY = Math.max(maxY, v.getY());
+                maxZ = Math.max(maxZ, v.getZ());
+            }
+        }
+
+        return new Vector3d(
+                (minX + maxX) / 2.0,
+                (minY + maxY) / 2.0,
+                (minZ + maxZ) / 2.0);
+    }
+
+    private void applyScale(List<Polygon> polygons, List<LineString> lines,
+                            List<StatePoint> states, double s) {
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                v.setX(v.getX() * s);
+                v.setY(v.getY() * s);
+                v.setZ(v.getZ() * s);
+            }
+        }
+        for (LineString line : lines) {
+            for (Vector3d v : line.getVertices()) {
+                v.setX(v.getX() * s);
+                v.setY(v.getY() * s);
+                v.setZ(v.getZ() * s);
+            }
+        }
+        for (StatePoint state : states) {
+            Vector3d pos = state.getPosition();
+            pos.setX(pos.getX() * s);
+            pos.setY(pos.getY() * s);
+            pos.setZ(pos.getZ() * s);
+        }
+    }
+
+    private void applyTranslation(List<Polygon> polygons, List<LineString> lines,
+                                  List<StatePoint> states,
+                                  double tx, double ty, double tz) {
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                v.setX(v.getX() + tx);
+                v.setY(v.getY() + ty);
+                v.setZ(v.getZ() + tz);
+            }
+        }
+        for (LineString line : lines) {
+            for (Vector3d v : line.getVertices()) {
+                v.setX(v.getX() + tx);
+                v.setY(v.getY() + ty);
+                v.setZ(v.getZ() + tz);
+            }
+        }
+        for (StatePoint state : states) {
+            Vector3d pos = state.getPosition();
+            pos.setX(pos.getX() + tx);
+            pos.setY(pos.getY() + ty);
+            pos.setZ(pos.getZ() + tz);
+        }
     }
 
     private Polygon poly(Vector3d v1, Vector3d v2, Vector3d v3, Vector3d v4) {

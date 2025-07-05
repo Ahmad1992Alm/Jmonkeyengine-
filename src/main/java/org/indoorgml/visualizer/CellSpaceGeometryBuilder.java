@@ -8,6 +8,8 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.render.RenderQueue;
+import com.jme3.render.RenderState;
 import com.jme3.util.BufferUtils;
 
 import org.indoorgml.model.Polygon;
@@ -25,18 +27,28 @@ public class CellSpaceGeometryBuilder {
     }
 
     /**
-     * Creates a node containing geometries for all cell spaces.
+     * Creates a node containing geometries for all cell spaces using a default color.
      */
     public static Node buildCellSpaces(List<Polygon> polygons, AssetManager assetManager) {
+        return buildCellSpaces(polygons, assetManager, ColorRGBA.LightGray, 1f);
+    }
+
+    /**
+     * Creates a node containing geometries for all cell spaces using the given color
+     * and alpha value.
+     */
+    public static Node buildCellSpaces(List<Polygon> polygons, AssetManager assetManager,
+                                       ColorRGBA color, float alpha) {
         Node node = new Node("cellSpaces");
-        Material material = defaultMaterial(assetManager);
+        Material material = material(assetManager, color, alpha);
+        boolean transparent = alpha < 1f;
         for (Polygon poly : polygons) {
-            node.attachChild(buildGeometry(poly, material));
+            node.attachChild(buildGeometry(poly, material, transparent));
         }
         return node;
     }
 
-    private static Geometry buildGeometry(Polygon polygon, Material material) {
+    private static Geometry buildGeometry(Polygon polygon, Material material, boolean transparent) {
         Mesh mesh = new Mesh();
 
         float[] vertices = new float[polygon.getVertices().size() * 3];
@@ -56,12 +68,20 @@ public class CellSpaceGeometryBuilder {
 
         Geometry geom = new Geometry("cellSpace", mesh);
         geom.setMaterial(material);
+        if (transparent) {
+            geom.setQueueBucket(RenderQueue.Bucket.Transparent);
+        }
         return geom;
     }
 
-    private static Material defaultMaterial(AssetManager assetManager) {
+    private static Material material(AssetManager assetManager, ColorRGBA color, float alpha) {
         Material mat = new Material(assetManager, Materials.UNSHADED);
-        mat.setColor("Color", ColorRGBA.LightGray);
+        ColorRGBA c = color.clone();
+        c.a = alpha;
+        mat.setColor("Color", c);
+        if (alpha < 1f) {
+            mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        }
         return mat;
     }
 }
