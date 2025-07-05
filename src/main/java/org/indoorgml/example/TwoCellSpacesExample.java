@@ -2,12 +2,15 @@ package org.indoorgml.example;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.ChaseCamera;
+import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 import org.indoorgml.model.LineString;
 import org.indoorgml.model.Polygon;
 import org.indoorgml.model.StatePoint;
 import org.indoorgml.model.Vector3d;
-import org.indoorgml.visualizer.IndoorGMLVisualizer;
+import org.indoorgml.visualizer.CellSpaceGeometryBuilder;
+import org.indoorgml.visualizer.StateGeometryBuilder;
+import org.indoorgml.visualizer.TransitionGeometryBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,8 +55,13 @@ public class TwoCellSpacesExample extends SimpleApplication {
         applyTranslation(allPolygons, transitions, states,
                 -center.getX(), -center.getY(), -center.getZ());
 
-        IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
-        Node scene = visualizer.buildScene(allPolygons, transitions, states);
+        Node scene = new Node("scene");
+        scene.attachChild(CellSpaceGeometryBuilder.buildCellSpaces(cellSpace1, assetManager,
+                ColorRGBA.Blue, 0.5f));
+        scene.attachChild(CellSpaceGeometryBuilder.buildCellSpaces(cellSpace2, assetManager,
+                ColorRGBA.Orange, 0.5f));
+        scene.attachChild(TransitionGeometryBuilder.buildTransitions(transitions, assetManager));
+        scene.attachChild(StateGeometryBuilder.buildStates(states, assetManager));
         rootNode.attachChild(scene);
 
         flyCam.setEnabled(false);
