@@ -1,6 +1,7 @@
 package org.indoorgml.example;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.input.ChaseCamera;
 import com.jme3.scene.Node;
 import org.indoorgml.model.LineString;
 import org.indoorgml.model.Polygon;
@@ -17,6 +18,8 @@ import java.util.List;
  * polygons and connects their centroids with a transition.
  */
 public class TwoCellSpacesExample extends SimpleApplication {
+
+    private ChaseCamera chaseCam;
 
     public static void main(String[] args) {
         TwoCellSpacesExample app = new TwoCellSpacesExample();
@@ -55,7 +58,11 @@ public class TwoCellSpacesExample extends SimpleApplication {
 
         rootNode.attachChild(scene);
 
-        flyCam.setMoveSpeed(5f);
+        flyCam.setEnabled(false);
+        chaseCam = new ChaseCamera(cam, scene, inputManager);
+        chaseCam.setDefaultDistance(6f);
+        chaseCam.setMinDistance(2f);
+        chaseCam.setMaxDistance(20f);
     }
 
     private List<LineString> createTransition(StatePoint a, StatePoint b) {
