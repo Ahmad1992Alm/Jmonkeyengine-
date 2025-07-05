@@ -42,6 +42,11 @@ public class TwoCellSpacesExample extends SimpleApplication {
 
         IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
         Node scene = visualizer.buildScene(allPolygons, transitions, states);
+
+        // Move the geometries close to the origin so they are visible with the default camera
+        Vector3d center = computeCentroid(allPolygons).getPosition();
+        scene.setLocalTranslation((float) -center.getX(), (float) -center.getY(), (float) -center.getZ());
+
         rootNode.attachChild(scene);
 
         flyCam.setMoveSpeed(5f);
