@@ -43,20 +43,17 @@ public class TwoCellSpacesExample extends SimpleApplication {
 
         List<LineString> transitions = createTransition(states.get(0), states.get(1));
 
-        IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
-        Node scene = visualizer.buildScene(allPolygons, transitions, states);
-
-        // Scale the large coordinates down to a window friendly size and
-        // center the scene around the origin so it appears in front of the
-        // camera.  The bounding box ensures all geometry fits on screen.
+        // Scale large coordinates down and translate them so the geometry is
+        // centered around the origin before creating the scene graph.
         float scale = (float) (10.0 / computeMaxDimension(allPolygons));
-        scene.setLocalScale(scale);
+        applyScale(allPolygons, transitions, states, scale);
 
         Vector3d center = computeBoundingCenter(allPolygons);
-        scene.setLocalTranslation((float) (-center.getX() * scale),
-                                 (float) (-center.getY() * scale),
-                                 (float) (-center.getZ() * scale));
+        applyTranslation(allPolygons, transitions, states,
+                -center.getX(), -center.getY(), -center.getZ());
 
+        IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
+        Node scene = visualizer.buildScene(allPolygons, transitions, states);
         rootNode.attachChild(scene);
 
         flyCam.setEnabled(false);
@@ -142,6 +139,55 @@ public class TwoCellSpacesExample extends SimpleApplication {
                 (minX + maxX) / 2.0,
                 (minY + maxY) / 2.0,
                 (minZ + maxZ) / 2.0);
+    }
+
+    private void applyScale(List<Polygon> polygons, List<LineString> lines,
+                            List<StatePoint> states, double s) {
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                v.setX(v.getX() * s);
+                v.setY(v.getY() * s);
+                v.setZ(v.getZ() * s);
+            }
+        }
+        for (LineString line : lines) {
+            for (Vector3d v : line.getVertices()) {
+                v.setX(v.getX() * s);
+                v.setY(v.getY() * s);
+                v.setZ(v.getZ() * s);
+            }
+        }
+        for (StatePoint state : states) {
+            Vector3d pos = state.getPosition();
+            pos.setX(pos.getX() * s);
+            pos.setY(pos.getY() * s);
+            pos.setZ(pos.getZ() * s);
+        }
+    }
+
+    private void applyTranslation(List<Polygon> polygons, List<LineString> lines,
+                                  List<StatePoint> states,
+                                  double tx, double ty, double tz) {
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                v.setX(v.getX() + tx);
+                v.setY(v.getY() + ty);
+                v.setZ(v.getZ() + tz);
+            }
+        }
+        for (LineString line : lines) {
+            for (Vector3d v : line.getVertices()) {
+                v.setX(v.getX() + tx);
+                v.setY(v.getY() + ty);
+                v.setZ(v.getZ() + tz);
+            }
+        }
+        for (StatePoint state : states) {
+            Vector3d pos = state.getPosition();
+            pos.setX(pos.getX() + tx);
+            pos.setY(pos.getY() + ty);
+            pos.setZ(pos.getZ() + tz);
+        }
     }
 
     private Polygon poly(Vector3d v1, Vector3d v2, Vector3d v3, Vector3d v4) {
