@@ -12,6 +12,7 @@ import com.jme3.render.RenderQueue;
 import com.jme3.render.RenderState;
 import com.jme3.util.BufferUtils;
 
+import org.indoorgml.model.CellSpace;
 import org.indoorgml.model.Polygon;
 import org.indoorgml.model.Vector3d;
 
@@ -46,6 +47,26 @@ public class CellSpaceGeometryBuilder {
             node.attachChild(buildGeometry(poly, material, transparent));
         }
         return node;
+    }
+
+    /**
+     * Convenience method to build geometries directly from CellSpace objects.
+     */
+    public static Node buildCellSpacesFromCells(List<CellSpace> cells, AssetManager assetManager,
+                                               ColorRGBA color, float alpha) {
+        Node node = new Node("cellSpaces");
+        Material material = material(assetManager, color, alpha);
+        boolean transparent = alpha < 1f;
+        for (CellSpace cs : cells) {
+            for (Polygon poly : cs.getPolygons()) {
+                node.attachChild(buildGeometry(poly, material, transparent));
+            }
+        }
+        return node;
+    }
+
+    public static Node buildCellSpacesFromCells(List<CellSpace> cells, AssetManager assetManager) {
+        return buildCellSpacesFromCells(cells, assetManager, ColorRGBA.LightGray, 1f);
     }
 
     private static Geometry buildGeometry(Polygon polygon, Material material, boolean transparent) {
