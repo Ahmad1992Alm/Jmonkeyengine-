@@ -12,6 +12,7 @@ import com.jme3.util.BufferUtils;
 
 import org.indoorgml.model.LineString;
 import org.indoorgml.model.Vector3d;
+import org.indoorgml.model.Transition;
 
 import java.util.List;
 
@@ -33,6 +34,18 @@ public class TransitionGeometryBuilder {
         return node;
     }
 
+    public static Node buildTransitionsFromTransitions(List<Transition> transitions,
+                                                       AssetManager assetManager) {
+        Node node = new Node("transitions");
+        Material material = defaultMaterial(assetManager);
+        for (Transition t : transitions) {
+            Geometry geom = buildGeometry(t.getGeometry(), material);
+            geom.setUserData("transitionId", t.getId());
+            node.attachChild(geom);
+        }
+        return node;
+    }
+
     private static Geometry buildGeometry(LineString line, Material material) {
         Mesh mesh = new Mesh();
 
@@ -49,7 +62,9 @@ public class TransitionGeometryBuilder {
         mesh.updateBound();
 
         Geometry geom = new Geometry("transition", mesh);
-        geom.setMaterial(material);
+        geom.setMaterial(material.clone());
+        ColorRGBA base = material.getParam("Color").getValue();
+        geom.setUserData("baseColor", base.clone());
         return geom;
     }
 
