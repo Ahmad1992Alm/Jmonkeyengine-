@@ -59,7 +59,10 @@ public class CellSpaceGeometryBuilder {
         boolean transparent = alpha < 1f;
         for (CellSpace cs : cells) {
             for (Polygon poly : cs.getPolygons()) {
-                node.attachChild(buildGeometry(poly, material, transparent));
+                Geometry geom = buildGeometry(poly, material, transparent);
+                geom.setUserData("cellId", cs.getId());
+                geom.setUserData("polygonId", poly.getId());
+                node.attachChild(geom);
             }
         }
         return node;
@@ -88,7 +91,9 @@ public class CellSpaceGeometryBuilder {
         mesh.updateBound();
 
         Geometry geom = new Geometry("cellSpace", mesh);
-        geom.setMaterial(material);
+        geom.setMaterial(material.clone());
+        ColorRGBA base = material.getParam("Color").getValue();
+        geom.setUserData("baseColor", base.clone());
         if (transparent) {
             geom.setQueueBucket(RenderQueue.Bucket.Transparent);
         }

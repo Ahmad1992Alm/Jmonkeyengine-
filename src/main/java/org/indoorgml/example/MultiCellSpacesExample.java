@@ -11,6 +11,7 @@ import org.indoorgml.model.Vector3d;
 import org.indoorgml.visualizer.CellSpaceGeometryBuilder;
 import org.indoorgml.visualizer.StateGeometryBuilder;
 import org.indoorgml.visualizer.TransitionGeometryBuilder;
+import org.indoorgml.util.GeometryUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,10 +46,10 @@ public class MultiCellSpacesExample extends SimpleApplication {
 
         // Scale large coordinates down and translate them so the geometry is
         // centered around the origin before creating the scene graph.
-        float scale = (float) (10.0 / computeMaxDimension(allPolygons));
+        float scale = (float) (10.0 / GeometryUtils.computeMaxDimension(allPolygons));
         applyScale(allPolygons, transitions, states, scale);
 
-        Vector3d center = computeBoundingCenter(allPolygons);
+        Vector3d center = GeometryUtils.computeBoundingCenter(allPolygons);
         applyTranslation(allPolygons, transitions, states,
                 -center.getX(), -center.getY(), -center.getZ());
 
@@ -104,55 +105,6 @@ public class MultiCellSpacesExample extends SimpleApplication {
         return state;
     }
 
-    private double computeMaxDimension(List<Polygon> polygons) {
-        double minX = Double.POSITIVE_INFINITY;
-        double minY = Double.POSITIVE_INFINITY;
-        double minZ = Double.POSITIVE_INFINITY;
-        double maxX = Double.NEGATIVE_INFINITY;
-        double maxY = Double.NEGATIVE_INFINITY;
-        double maxZ = Double.NEGATIVE_INFINITY;
-
-        for (Polygon poly : polygons) {
-            for (Vector3d v : poly.getVertices()) {
-                minX = Math.min(minX, v.getX());
-                minY = Math.min(minY, v.getY());
-                minZ = Math.min(minZ, v.getZ());
-                maxX = Math.max(maxX, v.getX());
-                maxY = Math.max(maxY, v.getY());
-                maxZ = Math.max(maxZ, v.getZ());
-            }
-        }
-
-        double dx = maxX - minX;
-        double dy = maxY - minY;
-        double dz = maxZ - minZ;
-        return Math.max(dx, Math.max(dy, dz));
-    }
-
-    private Vector3d computeBoundingCenter(List<Polygon> polygons) {
-        double minX = Double.POSITIVE_INFINITY;
-        double minY = Double.POSITIVE_INFINITY;
-        double minZ = Double.POSITIVE_INFINITY;
-        double maxX = Double.NEGATIVE_INFINITY;
-        double maxY = Double.NEGATIVE_INFINITY;
-        double maxZ = Double.NEGATIVE_INFINITY;
-
-        for (Polygon poly : polygons) {
-            for (Vector3d v : poly.getVertices()) {
-                minX = Math.min(minX, v.getX());
-                minY = Math.min(minY, v.getY());
-                minZ = Math.min(minZ, v.getZ());
-                maxX = Math.max(maxX, v.getX());
-                maxY = Math.max(maxY, v.getY());
-                maxZ = Math.max(maxZ, v.getZ());
-            }
-        }
-
-        return new Vector3d(
-                (minX + maxX) / 2.0,
-                (minY + maxY) / 2.0,
-                (minZ + maxZ) / 2.0);
-    }
 
     private void applyScale(List<Polygon> polygons, List<LineString> lines,
                             List<StatePoint> states, double s) {

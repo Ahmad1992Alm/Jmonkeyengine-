@@ -37,9 +37,12 @@ public class StateGeometryBuilder {
     private static Geometry buildGeometry(StatePoint state, Material material) {
         Sphere sphere = new Sphere(10, 10, RADIUS);
         Geometry geom = new Geometry("state", sphere);
-        geom.setMaterial(material);
+        geom.setMaterial(material.clone());
+        ColorRGBA base = material.getParam("Color").getValue();
+        geom.setUserData("baseColor", base.clone());
         Vector3d pos = state.getPosition();
         geom.setLocalTranslation(new Vector3f((float) pos.getX(), (float) pos.getY(), (float) pos.getZ()));
+        geom.setUserData("stateId", state.getId());
         return geom;
     }
 

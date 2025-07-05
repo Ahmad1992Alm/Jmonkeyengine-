@@ -7,6 +7,7 @@ import java.util.*;
  */
 public class IndoorGMLModel {
     private final Map<String, CellSpace> cellSpaces = new LinkedHashMap<>();
+    private final Map<String, StatePoint> states = new LinkedHashMap<>();
     private final Map<String, Transition> transitions = new LinkedHashMap<>();
     private int cellCounter = 1;
     private int stateCounter = 1;
@@ -29,6 +30,7 @@ public class IndoorGMLModel {
         state.setId("S" + stateCounter++);
         state.setPosition(computeCentroid(polygons));
         cell.setState(state);
+        states.put(state.getId(), state);
         cellSpaces.put(cellId, cell);
         return cell;
     }
@@ -42,6 +44,7 @@ public class IndoorGMLModel {
             return;
         }
         String stateId = cell.getState().getId();
+        states.remove(stateId);
         transitions.values().removeIf(t ->
                 t.getStateA().getId().equals(stateId) ||
                         t.getStateB().getId().equals(stateId));
@@ -67,8 +70,28 @@ public class IndoorGMLModel {
         return cellSpaces.values();
     }
 
+    public Collection<StatePoint> getStates() {
+        return states.values();
+    }
+
     public Collection<Transition> getTransitions() {
         return transitions.values();
+    }
+
+    public void removeState(String stateId) {
+        states.remove(stateId);
+        cellSpaces.values().forEach(cs -> {
+            if (cs.getState() != null && cs.getState().getId().equals(stateId)) {
+                cs.setState(null);
+            }
+        });
+        transitions.values().removeIf(t ->
+                t.getStateA().getId().equals(stateId) ||
+                        t.getStateB().getId().equals(stateId));
+    }
+
+    public void removeTransition(String transitionId) {
+        transitions.remove(transitionId);
     }
 
     private Vector3d computeCentroid(List<Polygon> polygons) {
