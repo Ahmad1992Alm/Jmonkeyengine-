@@ -46,12 +46,13 @@ public class TwoCellSpacesExample extends SimpleApplication {
         IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
         Node scene = visualizer.buildScene(allPolygons, transitions, states);
 
-        // Scale the large coordinates down to a window friendly size
+        // Scale the large coordinates down to a window friendly size and
+        // center the scene around the origin so it appears in front of the
+        // camera.  The bounding box ensures all geometry fits on screen.
         float scale = (float) (10.0 / computeMaxDimension(allPolygons));
         scene.setLocalScale(scale);
 
-        // Move the geometries close to the origin so they are visible with the default camera
-        Vector3d center = computeCentroid(allPolygons).getPosition();
+        Vector3d center = computeBoundingCenter(allPolygons);
         scene.setLocalTranslation((float) (-center.getX() * scale),
                                  (float) (-center.getY() * scale),
                                  (float) (-center.getZ() * scale));
@@ -61,6 +62,7 @@ public class TwoCellSpacesExample extends SimpleApplication {
         flyCam.setEnabled(false);
         chaseCam = new ChaseCamera(cam, scene, inputManager);
         chaseCam.setDefaultDistance(6f);
+        chaseCam.setDragToRotate(true);
         chaseCam.setMinDistance(2f);
         chaseCam.setMaxDistance(20f);
     }
@@ -115,6 +117,31 @@ public class TwoCellSpacesExample extends SimpleApplication {
         double dy = maxY - minY;
         double dz = maxZ - minZ;
         return Math.max(dx, Math.max(dy, dz));
+    }
+
+    private Vector3d computeBoundingCenter(List<Polygon> polygons) {
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double minZ = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        double maxZ = Double.NEGATIVE_INFINITY;
+
+        for (Polygon poly : polygons) {
+            for (Vector3d v : poly.getVertices()) {
+                minX = Math.min(minX, v.getX());
+                minY = Math.min(minY, v.getY());
+                minZ = Math.min(minZ, v.getZ());
+                maxX = Math.max(maxX, v.getX());
+                maxY = Math.max(maxY, v.getY());
+                maxZ = Math.max(maxZ, v.getZ());
+            }
+        }
+
+        return new Vector3d(
+                (minX + maxX) / 2.0,
+                (minY + maxY) / 2.0,
+                (minZ + maxZ) / 2.0);
     }
 
     private Polygon poly(Vector3d v1, Vector3d v2, Vector3d v3, Vector3d v4) {
