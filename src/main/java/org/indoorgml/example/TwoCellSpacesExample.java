@@ -43,13 +43,15 @@ public class TwoCellSpacesExample extends SimpleApplication {
         IndoorGMLVisualizer visualizer = new IndoorGMLVisualizer(assetManager);
         Node scene = visualizer.buildScene(allPolygons, transitions, states);
 
-        // Move the geometries close to the origin so they are visible with the default camera
-        Vector3d center = computeCentroid(allPolygons).getPosition();
-        scene.setLocalTranslation((float) -center.getX(), (float) -center.getY(), (float) -center.getZ());
-
         // Scale the large coordinates down to a window friendly size
         float scale = (float) (10.0 / computeMaxDimension(allPolygons));
         scene.setLocalScale(scale);
+
+        // Move the geometries close to the origin so they are visible with the default camera
+        Vector3d center = computeCentroid(allPolygons).getPosition();
+        scene.setLocalTranslation((float) (-center.getX() * scale),
+                                 (float) (-center.getY() * scale),
+                                 (float) (-center.getZ() * scale));
 
         rootNode.attachChild(scene);
 
